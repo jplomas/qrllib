@@ -8,7 +8,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: cmake -DBUILD_PYTHON=ON -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5
+      - run: cmake -DBUILD_PYTHON=ON .
       - run: make
       - run: export GTEST_COLOR=1 && ctest -VV
 
