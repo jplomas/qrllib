@@ -4,7 +4,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: qrledger/qrl-docker:xenial
+      - image: qrledger/qrl-docker:jammy
     steps:
       - checkout
       - run: git submodule update --init --recursive
