@@ -51,11 +51,26 @@ void descriptorBytes(const std::vector<uint8_t>& bytes)
     }
 
     hashFunction(static_cast<eHashFunction>(bytes[0] & 0x0F));
-    if ((bytes[0] >> 4) != 0) {
+    addressFormat(static_cast<eAddrFormatType>((bytes[1] >> 4) & 0x0F));
+
+    // The XMSS tree rules below only apply to XMSS descriptors. QRL also uses
+    // signature type 1 for multi-sig addresses, which have no tree and so
+    // legitimately carry height 0 - validating those as XMSS rejected every
+    // multi-sig address.
+    const auto signatureType = static_cast<unsigned>(bytes[0] >> 4);
+    const auto treeHeight = static_cast<uint8_t>((bytes[1] & 0x0F) << 1);
+    switch (signatureType) {
+    case 0:  // XMSS
+        height(treeHeight);
+        break;
+    case 1:  // multi-sig
+        if (treeHeight != 0) {
+            throw std::invalid_argument("Multi-sig descriptor height must be zero");
+        }
+        break;
+    default:
         throw std::invalid_argument("Unsupported signature type");
     }
-    addressFormat(static_cast<eAddrFormatType>((bytes[1] >> 4) & 0x0F));
-    height(static_cast<uint8_t>((bytes[1] & 0x0F) << 1));
 }
 
 uint32_t signatureCount(uint8_t value)

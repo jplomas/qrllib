@@ -13,6 +13,9 @@
 
 enum eSignatureType {
   XMSS = 0,
+  // QRL multi-sig addresses carry descriptor byte 0x11, i.e. signature type 1.
+  // They are not XMSS keys: there is no tree, so the height nibble is zero.
+  MULTISIG = 1,
 };
 
 class QRLDescriptor {
@@ -28,10 +31,20 @@ public:
             _addrFormatType(addrFormatType)
     {
         XmssValidation::hashFunction(hashFunction);
-        if (signatureType != eSignatureType::XMSS) {
+        switch (signatureType) {
+        case eSignatureType::XMSS:
+            XmssValidation::height(height);
+            break;
+        case eSignatureType::MULTISIG:
+            // No XMSS tree behind a multi-sig address, so the height nibble
+            // must be zero rather than an even 4..30.
+            if (height != 0) {
+                throw std::invalid_argument("Multi-sig descriptor height must be zero");
+            }
+            break;
+        default:
             throw std::invalid_argument("Unsupported signature type");
         }
-        XmssValidation::height(height);
         XmssValidation::addressFormat(addrFormatType);
     }
 
